@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+
+  api:
+    container_name: courses-api
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - 5000:5000
+    volumes:
+      - .\CourseLibrary.API:/home/app
+    depends_on:
+      - sqlserver
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    container_name: courses-db
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata1:/var/opt/mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=V3ryStr0ngPa55!
+
+volumes:
+  sqldata1:
+    name: my-app-data

@@ -68,7 +68,7 @@ namespace CourseLibrary.API
             services.AddDbContext<CourseLibraryContext>(options =>
             {
                 options.UseSqlServer(
-                    @"Server=(localdb)\mssqllocaldb;Database=CourseLibraryDB;Trusted_Connection=True;");
+                    @"Server=sqlserver;Database=CourseLibraryDB;User Id=sa;Password=V3ryStr0ngPa55!;");
             }); 
         }
 
