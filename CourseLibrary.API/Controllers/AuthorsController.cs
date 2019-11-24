@@ -19,9 +19,11 @@ namespace CourseLibrary.API.Controllers
         private readonly ICourseLibraryRepository _courseLibraryRepository;
         private readonly IMapper _mapper;
         private readonly IPropertyMappingService _propertyMappingService;
+        private readonly IPropertyCheckerService _propertyCheckerService;
 
         public AuthorsController(ICourseLibraryRepository courseLibraryRepository,
-            IMapper mapper, IPropertyMappingService propertyMappingService)
+            IMapper mapper, IPropertyMappingService propertyMappingService,
+            IPropertyCheckerService propertyCheckerService)
         {
             _courseLibraryRepository = courseLibraryRepository ??
                 throw new ArgumentNullException(nameof(courseLibraryRepository));
@@ -29,6 +31,8 @@ namespace CourseLibrary.API.Controllers
                 throw new ArgumentNullException(nameof(mapper));
             _propertyMappingService = propertyMappingService ??
               throw new ArgumentNullException(nameof(propertyMappingService));
+            _propertyCheckerService = propertyCheckerService ??
+                throw new ArgumentNullException(nameof(propertyCheckerService));
         }
 
         [HttpGet(Name = "GetAuthors")]
@@ -37,7 +41,10 @@ namespace CourseLibrary.API.Controllers
             [FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
             if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Entities.Author>
-                (authorsResourceParameters.OrderBy))
+                (authorsResourceParameters.OrderBy) ||
+                
+                !_propertyCheckerService.TypeHasProperties<AuthorDto>(
+                    authorsResourceParameters.Fields))
             {
                 return BadRequest();
             }
@@ -72,6 +79,11 @@ namespace CourseLibrary.API.Controllers
         [HttpGet("{authorId}", Name ="GetAuthor")]
         public IActionResult GetAuthor(Guid authorId, string fields)
         {
+            if (!_propertyCheckerService.TypeHasProperties<AuthorDto>(fields))
+            {
+                return BadRequest();
+            }
+
             var authorFromRepo = _courseLibraryRepository.GetAuthor(authorId);
 
             if (authorFromRepo == null)
