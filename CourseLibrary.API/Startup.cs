@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Linq;
 
 namespace CourseLibrary.API
 {
@@ -29,7 +31,6 @@ namespace CourseLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-
             }).AddNewtonsoftJson(setupAction =>
              {
                  setupAction.SerializerSettings.ContractResolver =
@@ -58,6 +59,16 @@ namespace CourseLibrary.API
                 };
             });
 
+            services.Configure<MvcOptions>(opt => {
+                var newtonsoftJsonOutputFormatter = opt.OutputFormatters
+                      .OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
+
+                if (newtonsoftJsonOutputFormatter != null)
+                {
+                    newtonsoftJsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json");
+                }
+            });
+
             // register PropertyMappingService
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
@@ -69,7 +80,7 @@ namespace CourseLibrary.API
             services.AddDbContext<CourseLibraryContext>(options =>
             {
                 options.UseSqlServer(
-                    @"Server=sqlserver;Database=CourseLibraryDB;User Id=sa;Password=V3ryStr0ngPa55!;");
+                    @"Server=127.0.0.1;Database=CourseLibraryDB;User Id=sa;Password=V3ryStr0ngPa55!;");
             }); 
         }
 
