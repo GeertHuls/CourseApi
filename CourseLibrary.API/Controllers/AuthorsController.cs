@@ -87,6 +87,12 @@ namespace CourseLibrary.API.Controllers
             return Ok(linkedCollectionResource);
         }
 
+        [Produces("application/json", 
+            "application/vnd.marvin.hateoas+json",
+            "application/vnd.marvin.author.full+json", 
+            "application/vnd.marvin.author.full.hateoas+json",
+            "application/vnd.marvin.author.friendly+json", 
+            "application/vnd.marvin.author.friendly.hateoas+json")]
         [HttpGet("{authorId}", Name ="GetAuthor")]
         public IActionResult GetAuthor(Guid authorId, string fields,
             [FromHeader(Name = "Accept")] string mediaType)
@@ -108,21 +114,46 @@ namespace CourseLibrary.API.Controllers
             {
                 return NotFound();
             }
-             
-            var author = _mapper.Map<AuthorDto>(authorFromRepo)
-                    .ShapeData(fields);
 
-            if (parsedMediaType.MediaType == "application/vnd.marvin.hateoas+json")
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix
+               .EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
             {
-                var result = author as IDictionary<string, object>;
-
-                var links = CreateLinksForAuthor(authorId, fields);
-                result.Add("links", links);
-
-                return Ok(result);
+                links = CreateLinksForAuthor(authorId, fields);
             }
 
-            return Ok(author);
+            var primaryMediaType = includeLinks ?
+                parsedMediaType.SubTypeWithoutSuffix
+                .Substring(0, parsedMediaType.SubTypeWithoutSuffix.Length - 8)
+                : parsedMediaType.SubTypeWithoutSuffix;
+
+            // full author
+            if (primaryMediaType == "vnd.marvin.author.full")
+            {
+                var fullResourceToReturn = _mapper.Map<AuthorFullDto>(authorFromRepo)
+                    .ShapeData(fields) as IDictionary<string, object>;
+
+                if (includeLinks)
+                {
+                    fullResourceToReturn.Add("links", links);
+                }
+
+                return Ok(fullResourceToReturn);
+            }
+
+            // friendly author
+            var friendlyResourceToReturn = _mapper.Map<AuthorDto>(authorFromRepo)
+                .ShapeData(fields) as IDictionary<string, object>;
+
+            if (includeLinks)
+            {
+                friendlyResourceToReturn.Add("links", links);
+            }
+
+            return Ok(friendlyResourceToReturn);
         }
 
         [HttpPost(Name = "CreateAuthor")]
