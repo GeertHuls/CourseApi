@@ -28,6 +28,8 @@ namespace CourseLibrary.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpCacheHeaders();
+
             services.AddResponseCaching();
 
             services.AddControllers(setupAction =>
@@ -112,7 +114,14 @@ namespace CourseLibrary.API
 
             }
 
+            // this will serve cached response based on expiration time:
+            // eg: Chache-Control: 60, age: 14, Expires: <date>
             app.UseResponseCaching();
+
+            // this middleware short circuits when the response is still valid
+            // even after it has expired, in that case a 304 - not modified should be returned
+            // and the response body should not be regenerated
+            app.UseHttpCacheHeaders();
 
             app.UseRouting();
 
