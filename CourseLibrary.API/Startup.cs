@@ -36,6 +36,12 @@ namespace CourseLibrary.API
                     // setting to private will prevent the UseResponseCaching middleware
                     // from storing the response because that's public/shared cache
                     expirationModelOptions.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+                },
+                (validationModelOptions) =>
+                {
+                    // if a response becomes stale, invalidation has to happen
+                    // this will set a 'must-revaliate' directive to the Cache-Control response header
+                    validationModelOptions.MustRevalidate = true;
                 });
 
             services.AddResponseCaching();
