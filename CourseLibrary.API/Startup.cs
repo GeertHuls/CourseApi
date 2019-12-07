@@ -42,6 +42,10 @@ namespace CourseLibrary.API
                     // if a response becomes stale, invalidation has to happen
                     // this will set a 'must-revaliate' directive to the Cache-Control response header
                     validationModelOptions.MustRevalidate = true;
+
+                    // in request header add: If-None-Match: "<ETAG>" to validate against etags
+                    // if the etag as not changed the response will be a 304 - not modified
+                    // this is handled by the ResponseCachingStore (using UseResponseCaching middleware)
                 });
 
             services.AddResponseCaching();
@@ -130,7 +134,10 @@ namespace CourseLibrary.API
 
             // this will serve cached response based on expiration time:
             // eg: Chache-Control: 60, age: 14, Expires: <date>
-            app.UseResponseCaching();
+            // it also adds a (in-memory) cache store
+            // the response caching middleware is only suited for simple cases
+            // for etag validation this won't do as it will hold on the cached reponse based on expiration validation
+            // app.UseResponseCaching();
 
             // this middleware short circuits when the response is still valid
             // even after it has expired, in that case a 304 - not modified should be returned
