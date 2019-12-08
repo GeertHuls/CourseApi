@@ -108,7 +108,7 @@ namespace CourseLibrary.API
             services.AddDbContext<CourseLibraryContext>(options =>
             {
                 options.UseSqlServer(
-                    @"Server=127.0.0.1;Database=CourseLibraryDB;User Id=sa;Password=V3ryStr0ngPa55!;");
+                    @"Server=sqlserver;Database=CourseLibraryDB;User Id=sa;Password=V3ryStr0ngPa55!;");
             }); 
         }
 
